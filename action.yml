@@ -24,19 +24,19 @@ runs:
   using: "composite"
   steps:
     - run: echo "Build and push"
-      shell: sh
+      shell: bash
 
-    - run: echo "image= ${{ inputs.ecr-registry }}/${{ inputs.ecr-repository }}:${{ inputs.image-tag }}"
-      shell: sh
+    - run: docker pull $ECR_REGISTRY/$ECR_REPOSITORY:latest || docker pull $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG || true
+      shell: bash
 
     - id: build
       run: docker build --cache-from ${{ inputs.ecr-registry }}/${{ inputs.ecr-repository }}:${{ inputs.image-tag }} --cache-from ${{ inputs.ecr-registry }}/${{ inputs.ecr-repository }}:latest -t ${{ inputs.ecr-registry }}/${{ inputs.ecr-repository }}:${{ inputs.image-tag }} -t ${{ inputs.ecr-registry }}/${{ inputs.ecr-repository }}:latest . -f ${{ inputs.dockerfile-path }}
-      shell: sh
+      shell: bash
 
     - id: push
       run: docker push ${{ inputs.ecr-registry }}/${{ inputs.ecr-repository }} --all-tags
-      shell: sh
+      shell: bash
 
     - id: output-tag
       run: echo "image=${{ inputs.ecr-registry }}/${{ inputs.ecr-repository }}:${{ inputs.image-tag }}" >> $GITHUB_OUTPUT
-      shell: sh
+      shell: bash
