@@ -1,10 +1,21 @@
 name: 'Hello World'
 description: 'Greet someone'
 inputs:
-  who-to-greet:  # id of input
-    description: 'Who to greet'
+  ecr-repository:
+    description: Name of your ECR repository
     required: true
-    default: 'World'
+  ecr-registry:
+    description: Comma-separated string of ECR image tags
+    required: true
+  image-tag:
+    description: Docker Image ECR image tag
+    default: latest
+  dockerfile-path:
+    description: Name of Dockerfile to use
+    default: Dockerfile
+  extra-build-args:
+    description: Extra flags to pass to docker build (see docs.docker.com/engine/reference/commandline/build)
+    default: ""
 outputs:
   random-number:
     description: "Random number"
@@ -12,12 +23,16 @@ outputs:
 runs:
   using: "composite"
   steps:
-    - run: echo Hello ${{ inputs.who-to-greet }}.
-      shell: bash
-    - id: random-number-generator
-      run: echo "random-number=$(echo $RANDOM)" >> $GITHUB_OUTPUT
-      shell: bash
-    - run: echo "${{ github.action_path }}" >> $GITHUB_PATH
-      shell: bash
-    - run: goodbye.sh
-      shell: bash
+    run: |
+      docker pull ${{ inputs.ecr-registry }}/${{ inputs.ecr-registry }}:latest || \
+        docker pull ${{ inputs.ecr-registry }}/${{ inputs.ecr-registry }}:${{ inputs.image-tag }} || \
+        true
+      docker build \
+        --cache-from ${{ inputs.ecr-registry }}/${{ inputs.ecr-registry }}:${{ inputs.image-tag }} \
+        --cache-from ${{ inputs.ecr-registry }}/${{ inputs.ecr-registry }}:latest \
+        -t ${{ inputs.ecr-registry }}/${{ inputs.ecr-registry }}:${{ inputs.image-tag }} \
+        -t ${{ inputs.ecr-registry }}/${{ inputs.ecr-registry }}:latest \
+        . -f ${{ inputs.dockerfile-path }}
+      docker push ${{ inputs.ecr-registry }}/${{ inputs.ecr-registry }} --all-tags
+      echo "::set-output name=image::${{ inputs.ecr-registry }}/${{ inputs.ecr-registry }}:${{ inputs.image-tag }}"
+    shell: bash
