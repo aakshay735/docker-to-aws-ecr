@@ -17,9 +17,9 @@ inputs:
     description: Extra flags to pass to docker build (see docs.docker.com/engine/reference/commandline/build)
     default: ""
 outputs:
-  random-number:
-    description: "Random number"
-    value: ${{ steps.random-number-generator.outputs.random-number }}
+  image:
+    description: "ECR Image Id"
+    value: ${{ inputs.ecr-registry }}/${{ inputs.ecr-registry }}:${{ inputs.image-tag }}
 runs:
   using: "composite"
   steps:
@@ -34,5 +34,5 @@ runs:
         -t ${{ inputs.ecr-registry }}/${{ inputs.ecr-registry }}:latest \
         . -f ${{ inputs.dockerfile-path }}
       docker push ${{ inputs.ecr-registry }}/${{ inputs.ecr-registry }} --all-tags
-      echo "::set-output name=image::${{ inputs.ecr-registry }}/${{ inputs.ecr-registry }}:${{ inputs.image-tag }}"
+      echo "Build and push"
     shell: bash
