@@ -19,20 +19,20 @@ inputs:
 outputs:
   image:
     description: "ECR Image Id"
-    value: ${{ inputs.ecr-registry }}/${{ inputs.ecr-registry }}:${{ inputs.image-tag }}
+    value: ${{ steps.output-tag.outputs.image }}
 runs:
   using: "composite"
   steps:
-    run: |
-      docker pull ${{ inputs.ecr-registry }}/${{ inputs.ecr-registry }}:latest || \
-        docker pull ${{ inputs.ecr-registry }}/${{ inputs.ecr-registry }}:${{ inputs.image-tag }} || \
-        true
-      docker build \
-        --cache-from ${{ inputs.ecr-registry }}/${{ inputs.ecr-registry }}:${{ inputs.image-tag }} \
-        --cache-from ${{ inputs.ecr-registry }}/${{ inputs.ecr-registry }}:latest \
-        -t ${{ inputs.ecr-registry }}/${{ inputs.ecr-registry }}:${{ inputs.image-tag }} \
-        -t ${{ inputs.ecr-registry }}/${{ inputs.ecr-registry }}:latest \
-        . -f ${{ inputs.dockerfile-path }}
-      docker push ${{ inputs.ecr-registry }}/${{ inputs.ecr-registry }} --all-tags
-      echo "Build and push"
-    shell: bash
+    - run: echo "Build and push"
+    
+    - run: echo "image = ${{ inputs.ecr-registry }}/${{ inputs.ecr-registry }}:${{ inputs.image-tag }}"
+
+    - id: build
+      run: docker build --cache-from ${{ inputs.ecr-registry }}/${{ inputs.ecr-registry }}:${{ inputs.image-tag }} --cache-from ${{ inputs.ecr-registry }}/${{ inputs.ecr-registry }}:latest -t ${{ inputs.ecr-registry }}/${{ inputs.ecr-registry }}:${{ inputs.image-tag }} -t ${{ inputs.ecr-registry }}/${{ inputs.ecr-registry }}:latest . -f ${{ inputs.dockerfile-path }}
+    
+    - id: push
+      run: docker push ${{ inputs.ecr-registry }}/${{ inputs.ecr-registry }} --all-tags
+    
+    - id: output-tag
+      run: echo "image=${{ inputs.ecr-registry }}/${{ inputs.ecr-registry }}:${{ inputs.image-tag }}" >> $GITHUB_OUTPUT
+    
