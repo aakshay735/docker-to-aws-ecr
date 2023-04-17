@@ -5,7 +5,7 @@ inputs:
     description: Name of your ECR repository
     required: true
   ecr-registry:
-    description: Comma-separated string of ECR image tags
+    description: The URI of the ECR Private or ECR Public registry.
     required: true
   image-tag:
     description: Docker Image ECR image tag
@@ -26,17 +26,17 @@ runs:
     - run: echo "Build and push"
       shell: sh
 
-    - run: echo "image= ${{ inputs.ecr-registry }}/${{ inputs.ecr-registry }}:${{ inputs.image-tag }}"
+    - run: echo "image= ${{ inputs.ecr-registry }}/${{ inputs.ecr-repository }}:${{ inputs.image-tag }}"
       shell: sh
 
     - id: build
-      run: docker build --cache-from ${{ inputs.ecr-registry }}/${{ inputs.ecr-registry }}:${{ inputs.image-tag }} --cache-from ${{ inputs.ecr-registry }}/${{ inputs.ecr-registry }}:latest -t ${{ inputs.ecr-registry }}/${{ inputs.ecr-registry }}:${{ inputs.image-tag }} -t ${{ inputs.ecr-registry }}/${{ inputs.ecr-registry }}:latest . -f ${{ inputs.dockerfile-path }}
+      run: docker build --cache-from ${{ inputs.ecr-registry }}/${{ inputs.ecr-repository }}:${{ inputs.image-tag }} --cache-from ${{ inputs.ecr-registry }}/${{ inputs.ecr-repository }}:latest -t ${{ inputs.ecr-registry }}/${{ inputs.ecr-repository }}:${{ inputs.image-tag }} -t ${{ inputs.ecr-registry }}/${{ inputs.ecr-repository }}:latest . -f ${{ inputs.dockerfile-path }}
       shell: sh
 
     - id: push
-      run: docker push ${{ inputs.ecr-registry }}/${{ inputs.ecr-registry }} --all-tags
+      run: docker push ${{ inputs.ecr-registry }}/${{ inputs.ecr-repository }} --all-tags
       shell: sh
 
     - id: output-tag
-      run: echo "image=${{ inputs.ecr-registry }}/${{ inputs.ecr-registry }}:${{ inputs.image-tag }}" >> $GITHUB_OUTPUT
+      run: echo "image=${{ inputs.ecr-registry }}/${{ inputs.ecr-repository }}:${{ inputs.image-tag }}" >> $GITHUB_OUTPUT
       shell: sh
