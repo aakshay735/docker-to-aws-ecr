@@ -1,40 +1,53 @@
-name: 'Hello World'
-description: 'Greet someone'
+name: Build and push Docker image
+
+description: |
+  Builds a Docker image from a Dockerfile and pushes it to an Amazon ECR repository.
+
 inputs:
-  ecr-repository:
-    description: Name of your ECR repository
-    required: true
   ecr-registry:
-    description: The URI of the ECR Private or ECR Public registry.
+    description: 'The Amazon ECR registry URI, e.g. 123456789012.dkr.ecr.us-west-2.amazonaws.com'
     required: true
+    type: string
+  ecr-repository:
+    description: 'The name of the Amazon ECR repository to push the image to'
+    required: true
+    type: string
   image-tag:
-    description: Docker Image ECR image tag
-    default: latest
+    description: 'The tag to apply to the Docker image'
+    required: true
+    type: string
   dockerfile-path:
-    description: Name of Dockerfile to use
-    default: Dockerfile
-  extra-build-args:
-    description: Extra flags to pass to docker build (see docs.docker.com/engine/reference/commandline/build)
-    default: ""
+    description: 'The path to the Dockerfile to build, relative to the root of the repository'
+    required: true
+    type: string
+  target:
+    description: 'The target stage to build in the Dockerfile'
+    required: false
+    type: string
+    default: ''
+  extra-build-arg:
+    description: 'Additional build arguments to pass to `docker build`'
+    required: false
+    type: string
+    default: ''
+
 outputs:
   image:
     description: "ECR Image Id"
     value: ${{ steps.output-tag.outputs.image }}
+
 runs:
-  using: "composite"
+  using: 'composite'
   steps:
-    - run: echo "Build and push"
-      shell: bash
-
-    - run: docker pull $ECR_REGISTRY/$ECR_REPOSITORY:latest || docker pull $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG || true
-      shell: bash
-
-    - id: build
-      run: docker build --cache-from ${{ inputs.ecr-registry }}/${{ inputs.ecr-repository }}:${{ inputs.image-tag }} --cache-from ${{ inputs.ecr-registry }}/${{ inputs.ecr-repository }}:latest -t ${{ inputs.ecr-registry }}/${{ inputs.ecr-repository }}:${{ inputs.image-tag }} -t ${{ inputs.ecr-registry }}/${{ inputs.ecr-repository }}:latest . -f ${{ inputs.dockerfile-path }}
-      shell: bash
-
-    - id: push
-      run: docker push ${{ inputs.ecr-registry }}/${{ inputs.ecr-repository }} --all-tags
+    - name: Build and push Docker image
+      run: |
+        bash build-and-push.sh \
+          "${{inputs.ecr-registry}}" \
+          "${{inputs.ecr-repository}}" \
+          "${{inputs.image-tag}}" \
+          "${{inputs.dockerfile-path}}" \
+          "${{inputs.target}}" \
+          "${{inputs.extra-build-arg}}"
       shell: bash
 
     - id: output-tag
