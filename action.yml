@@ -3,6 +3,10 @@ name: 'Build and push Docker image'
 description: 'Builds a Docker image from a Dockerfile and pushes it to an Amazon ECR repository.'
 
 inputs:
+  env:
+    description: 'Environment for which the docker images are being built, will be used for tagging'
+    required: true
+    type: string
   ecr-registry:
     description: 'The Amazon ECR registry URI, e.g. 123456789012.dkr.ecr.us-west-2.amazonaws.com'
     required: true
@@ -42,6 +46,7 @@ runs:
       shell: bash
     - name: Build and push Docker image
       run: build-and-push.sh \
+          "${{inputs.env}}" \
           "${{inputs.ecr-registry}}" \
           "${{inputs.ecr-repository}}" \
           "${{inputs.image-tag}}" \
